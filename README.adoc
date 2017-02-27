@@ -1,0 +1,64 @@
+= Jackson JSON Views with Spring's WebSocket Support
+
+This demo shows the use of Jackson JSON Views with Spring's WebSocket Support.
+
+Read about https://docs.spring.io/spring/docs/current/spring-framework-reference/html/websocket.html[Spring WebSocket Support]
+
+Read about http://wiki.fasterxml.com/JacksonJsonViews[Jackson JSON Views]
+
+== Jackson JSON View
+[source,java]
+----
+public class Views {
+
+    public class Public {
+    }
+
+    public class Internal extends Public {
+    }
+}
+----
+
+== Model
+[source,java]
+----
+public class Item {
+
+    @JsonView(Views.Public.class)
+    private int id;
+
+    @JsonView(Views.Public.class)
+    private String itemName;
+
+    @JsonView(Views.Internal.class)
+    private String ownerName;
+
+    ...
+}
+----
+
+== Controller
+Use the `CONVERSION_HINT_HEADER` with `SimpMessagingTemplate`.
+
+[source,java]
+----
+@MessageMapping("/messaging-template")
+public void getFrommessagingTemplate(Principal principal) {
+    Map<String, Object> headers = new HashMap<>();
+    headers.put(CONVERSION_HINT_HEADER, Views.Public.class);
+    messagingTemplate.convertAndSendToUser(principal.getName(), "/messaging-template-reply", getItem(), headers);
+}
+----
+
+
+Use the `@JsonView` annotation for controller methods.
+
+[source,java]
+----
+@MessageMapping("/send-to-user")
+@SendToUser(value = "/send-to-user-reply", broadcast = false)
+@JsonView(Views.Public.class)
+public Item getFromSendToUser() {
+    return getItem();
+}
+----
