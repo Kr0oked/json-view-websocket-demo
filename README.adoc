@@ -4,17 +4,17 @@ This demo shows the use of Jackson JSON Views with Spring's WebSocket Support.
 
 Read about https://docs.spring.io/spring/docs/current/spring-framework-reference/html/websocket.html[Spring WebSocket Support]
 
-Read about http://wiki.fasterxml.com/JacksonJsonViews[Jackson JSON Views]
+Read about https://github.com/FasterXML/jackson-annotations/wiki/Jackson-Annotations#deserialization-and-serialization-details[Jackson JSON Views]
 
 == Jackson JSON View
 [source,java]
 ----
 public class Views {
 
-    public class Public {
+    public static class Public {
     }
 
-    public class Internal extends Public {
+    public static class Internal extends Public {
     }
 }
 ----
@@ -25,7 +25,7 @@ public class Views {
 public class Item {
 
     @JsonView(Views.Public.class)
-    private int id;
+    private Integer id;
 
     @JsonView(Views.Public.class)
     private String itemName;
@@ -43,10 +43,17 @@ Use the `CONVERSION_HINT_HEADER` with `SimpMessagingTemplate`.
 [source,java]
 ----
 @MessageMapping("/messaging-template")
-public void getFrommessagingTemplate(Principal principal) {
-    Map<String, Object> headers = new HashMap<>();
-    headers.put(CONVERSION_HINT_HEADER, Views.Public.class);
-    messagingTemplate.convertAndSendToUser(principal.getName(), "/messaging-template-reply", getItem(), headers);
+public void useMessagingTemplate(Principal principal) {
+    var user = principal.getName();
+    var destination = "/response";
+    var item = getItem();
+    var headers = getHeaders();
+
+    messagingTemplate.convertAndSendToUser(user, destination, item, headers);
+}
+
+private Map<String, Object> getHeaders() {
+    return Map.of(CONVERSION_HINT_HEADER, Views.Public.class);
 }
 ----
 
@@ -55,10 +62,10 @@ Use the `@JsonView` annotation for controller methods.
 
 [source,java]
 ----
-@MessageMapping("/send-to-user")
-@SendToUser(value = "/send-to-user-reply", broadcast = false)
+@MessageMapping("/send-to-user-annotation")
+@SendToUser(value = "/response", broadcast = false)
 @JsonView(Views.Public.class)
-public Item getFromSendToUser() {
+public Item useSendToUserAnnotation() {
     return getItem();
 }
 ----

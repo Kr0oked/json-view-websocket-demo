@@ -2,23 +2,25 @@ var socket = new SockJS('/sock-js');
 var client = new Stomp.over(socket);
 
 var connectCallback = function () {
-    client.subscribe('/user/messaging-template-reply', messagingTemplateReplyCallback);
-    client.subscribe('/user/send-to-user-reply', sendToUserReplyCallback);
+  client.subscribe('/user/response', responseCallback);
+};
 
-    client.send('/app/messaging-template');
-    client.send('/app/send-to-user');
+var responseCallback = function (message) {
+  console.log('Response: ' + JSON.stringify(message));
+  alert(message);
 };
 
 var errorCallback = function (error) {
-    alert(error);
-};
-
-var messagingTemplateReplyCallback = function (message) {
-    alert(message);
-};
-
-var sendToUserReplyCallback = function (message) {
-    alert(message);
+  console.log('Error: ' + JSON.stringify(error));
+  alert(error);
 };
 
 client.connect('login', 'passcode', connectCallback, errorCallback);
+
+function triggerMessageWithMessagingTemplate() {
+  client.send('/app/messaging-template');
+}
+
+function triggerMessageWithSendToUserAnnotation() {
+  client.send('/app/send-to-user-annotation');
+}
